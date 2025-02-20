@@ -1101,6 +1101,11 @@ def grid_one_variable(this_ds, thisVar, fillValue=None, **kwargs):
         xy_1d_prefix = "patches"
         if "patches1d_itype_veg" in this_ds:
             vt_da = get_thisVar_da("patches1d_itype_veg", this_ds)
+    elif "pft" in thisvar_da.dims:
+        spatial_unit = "pft"
+        xy_1d_prefix = "pfts"
+        if "pfts1d_itype_veg" in this_ds:
+            vt_da = get_thisVar_da("pfts1d_itype_veg", this_ds)
     elif "gridcell" in thisvar_da.dims:
         spatial_unit = "gridcell"
         xy_1d_prefix = "grid"
