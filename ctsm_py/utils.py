@@ -1333,3 +1333,39 @@ def safer_timeslice(ds, timeSlice, timeVar="time"):
             raise
 
     return ds
+
+
+def food_grainc_to_harvested_tons_onecrop(data_in, this_crop):
+    """
+    Convert GRAINC_TO_FOOD* (carbon) to amount harvested (total biomass plus water weight, minus harvest loss) for one crop. Same procedure as used in Rabin et al. (2023, doi:10.5194/gmd-16-7253-2023). Conversion from /m2 to /ha or whatever needs to happen elsewhere.
+    """
+    # Parameters from Lombardozzi et al. (2020, doi:10.1029/2019jg005529)
+    fyield = 0.85  # 85% harvest efficiency (Kucharik & Brye, 2003, doi:10.2134/jeq2003.2470)
+    cgrain = 0.45  # 45% of dry biomass is C (Monfreda et al., 2008, doi:10.1029/2007GB002947)
+
+    # Dry matter fraction from Wirsenius (2000, "Human Use of Land and Organic Materials: Modeling
+    # the Turnover of Biomass in the Global Food System") Table A1.II except as noted
+    drymatter_fractions = {
+        "corn": 0.88,
+        "cotton": (
+            0.912
+        ),  # Table A1.III, "Seed cotton", incl. lint, seed, and "other (ginning waste)"
+        # "miscanthus": 0.0,  # Not included in Wirsenius, but also not simulated
+        "rice": 0.87,
+        "soybean": 0.91,
+        "sugarcane": (
+            1 - 0.745
+        ),  # Irvine, Cane Sugar Handbook, 10th ed., 1977, P. 16
+        "wheat": 0.88,
+    }
+
+    data_out = data_in / drymatter_fractions[this_crop]
+
+    # For sugarcane, also account for the fact that soluble solids are only 51% of dry matter.
+    # Also derived from Irvine, Cane Sugar Handbook, 10th ed., 1977, P. 16.
+    if this_crop == "sugarcane":
+        data_out /= 0.51
+
+    data_out *= fyield / cgrain
+
+    return data_out
