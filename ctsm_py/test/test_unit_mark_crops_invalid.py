@@ -107,9 +107,9 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
         self.assertTrue(np.array_equal(result, target))
 
-    def setup_huifrac_ds_pftlast(self):
+    def setup_minviablehui_ds_pftlast(self):
         """
-        Set up Dataset for huifrac testing with pft in last dimension
+        Set up Dataset and target for minimum viable HUI testing with pft in last dimension
         """
         n_pft = 4
         n_time = 2
@@ -139,7 +139,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         """
         Test that _get_isimip3_min_hui() works as expected when pft is on last dimension
         """
-        ds, target = self.setup_huifrac_ds_pftlast()
+        ds, target = self.setup_minviablehui_ds_pftlast()
 
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
         self.assertTrue(np.array_equal(result, target))
@@ -158,7 +158,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         """
         Test that _get_min_viable_hui() returns min_viable_hui if it's "isimip3"
         """
-        ds, target = self.setup_huifrac_ds_pftlast()
+        ds, target = self.setup_minviablehui_ds_pftlast()
         self.assertTrue(
             np.array_equal(mci._get_min_viable_hui(ds, "isimip3", self.huifrac_var), target)
         )
@@ -167,7 +167,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         """
         Test that _get_min_viable_hui() returns min_viable_hui if it's "ggcmi3"
         """
-        ds, target = self.setup_huifrac_ds_pftlast()
+        ds, target = self.setup_minviablehui_ds_pftlast()
         self.assertTrue(
             np.array_equal(mci._get_min_viable_hui(ds, "ggcmi3", self.huifrac_var), target)
         )
