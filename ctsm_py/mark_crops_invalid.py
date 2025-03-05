@@ -41,10 +41,7 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
     return min_viable_hui_touse
 
 
-def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
-    corn_value = 0.8   # Lower than other crops to account for silage maize harvest
-    other_value = 0.9
-
+def _pft_or_patch(ds):
     if "patches1d_itype_veg_str" in ds:
         pftpatch_str = "patch"
         pftpatch_var = "patches1d_itype_veg_str"
@@ -53,6 +50,14 @@ def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
         pftpatch_var = "pfts1d_itype_veg_str"
     else:
         raise KeyError("Neither patches1d_itype_veg_str nor pfts1d_itype_veg_str found in ds")
+    return pftpatch_str,pftpatch_var
+
+
+def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
+    corn_value = 0.8   # Lower than other crops to account for silage maize harvest
+    other_value = 0.9
+
+    pftpatch_str, pftpatch_var = _pft_or_patch(ds)
 
     min_viable_hui_touse = np.full_like(huifrac, fill_value=other_value)
     for veg_str in np.unique(ds[pftpatch_var].values):
@@ -112,16 +117,15 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
     xarray.DataArray: DataArray with invalid yields set to zero.
     """
     tmp_ra = da_in.copy().values
-    for veg_str in np.unique(ds.patches1d_itype_veg_str.values):
+    _, pftpatch_var = _pft_or_patch(ds)
+    for veg_str in np.unique(ds[pftpatch_var].values):
         mxmat_veg_str = veg_str.replace("soybean", "temperate_soybean").replace(
             "tropical_temperate", "tropical"
         )
         mxmat = mxmats[mxmat_veg_str]
-        tmp_ra[
-            np.where(
-                (ds.patches1d_itype_veg_str.values == veg_str) & (ds[gslen_var].values > mxmat)
+        tmp_ra[np.where((ds[pftpatch_var].values == veg_str) & (ds[gslen_var].values > mxmat))] = (
+            invalid_value
             )
-        ] = invalid_value
     da_out = xr.DataArray(data=tmp_ra, coords=da_in.coords, attrs=da_in.attrs)
     return da_out
 
