@@ -114,10 +114,19 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         n_pft = 4
         n_time = 2
         shape = (n_time, n_pft)
-        huifrac_in = np.empty(shape)
-        huifrac_in_da = xr.DataArray(data=huifrac_in, dims=["time", "pft"])
+        huifrac_in = np.array([[0.1, 0.9, 0.2, 0.8], [0.3, 0.7, 0.4, 0.6]])
+        huifrac_coords = {
+            "time": np.arange(n_time),
+            "pft": np.arange(n_pft),
+        }
+        huifrac_in_da = xr.DataArray(
+            data=huifrac_in,
+            dims=["time", "pft"],
+            coords=huifrac_coords,
+            attrs={"test_attribute": 15},
+        )
         vegstr = ["corn", "wheat", "soy", "rice"]
-        vegstr_da = xr.DataArray(data=vegstr, dims=["pft"])
+        vegstr_da = xr.DataArray(data=vegstr, dims=["pft"], coords={"pft": np.arange(n_pft)})
         ds = xr.Dataset(
             data_vars={
                 self.huifrac_var: huifrac_in_da,
@@ -179,3 +188,46 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         dummy_ds = xr.Dataset()
         with self.assertRaises(NotImplementedError):
             mci._get_min_viable_hui(dummy_ds, "abc123", self.huifrac_var)
+
+    def test_mark_invalid_hui_too_low(self):
+        """
+        Test mark_invalid_hui_too_low() with default invalid_value
+        """
+        ds, _ = self.setup_minviablehui_ds_pftlast()
+        da_in = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+            dims=ds[self.huifrac_var].dims,
+            coords=ds[self.huifrac_var].coords,
+            attrs=ds[self.huifrac_var].attrs,
+        )
+
+        min_viable_hui = 0.7
+
+        da_out = mci.mark_invalid_hui_too_low(
+            da_in, ds[self.huifrac_var], min_viable_hui
+        )
+        target = np.array([[0, 2, 0, 4], [0, 6, 0, 0]])
+
+        self.assertTrue(np.array_equal(da_out.values, target))
+
+    def test_mark_invalid_hui_too_low_nan(self):
+        """
+        Test mark_invalid_hui_too_low() with invalid_value=np.nan
+        """
+        ds, _ = self.setup_minviablehui_ds_pftlast()
+        da_in = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=np.float64),
+            dims=ds[self.huifrac_var].dims,
+            coords=ds[self.huifrac_var].coords,
+            attrs=ds[self.huifrac_var].attrs,
+        )
+
+        min_viable_hui = 0.7
+        invalid_value = np.nan
+
+        da_out = mci.mark_invalid_hui_too_low(
+            da_in, ds[self.huifrac_var], min_viable_hui, invalid_value=invalid_value
+        )
+        target = np.array([[np.nan, 2, np.nan, 4], [np.nan, 6, np.nan, np.nan]])
+
+        self.assertTrue(np.array_equal(da_out.values, target, equal_nan=True))
