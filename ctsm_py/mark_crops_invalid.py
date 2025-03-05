@@ -42,7 +42,7 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
 
 
 def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
-    corn_value = 0.8
+    corn_value = 0.8   # Lower than other crops to account for silage maize harvest
     other_value = 0.9
 
     if "patches1d_itype_veg_str" in ds:
@@ -57,6 +57,7 @@ def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
     min_viable_hui_touse = np.full_like(huifrac, fill_value=other_value)
     for veg_str in np.unique(ds[pftpatch_var].values):
         if "corn" not in veg_str:
+            # Skip, because the min_viable_hui_touse array is already set to other_value there
             continue
         is_thistype = np.where((ds[pftpatch_var].values == veg_str))[0]
         pftpatch_index = list(ds[huifrac_var].dims).index(pftpatch_str)
