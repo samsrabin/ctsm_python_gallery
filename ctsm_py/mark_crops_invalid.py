@@ -157,8 +157,7 @@ def mark_crops_invalid(
 
     # Set yield to zero where minimum viable HUI wasn't reached
     if min_viable_hui is not None:
-        huifrac = ds[var_dict["huifrac_var"]].copy().values
-        huifrac[np.where(ds[var_dict["gddharv_var"]].values == 0)] = 1
+        huifrac = _get_huifrac(ds, var_dict)
         min_viable_hui_touse = _get_min_viable_hui(
             ds, min_viable_hui, var_dict["huifrac_var"], huifrac
         )
@@ -180,3 +179,10 @@ def mark_crops_invalid(
         da_out.attrs["mxmat_limited"] = mxmat_limited
 
     return da_out
+
+def _get_huifrac(ds, var_dict=DEFAULT_VAR_DICT):
+    huifrac = ds[var_dict["huifrac_var"]].copy().values
+
+    # If harvest threshold HUI is 0, mark huifrac as 1
+    huifrac[np.where(ds[var_dict["gddharv_var"]].values == 0)] = 1
+    return huifrac
