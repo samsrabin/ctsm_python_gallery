@@ -3,6 +3,7 @@ Module to unit-test mark_crops_invalid.py
 """
 
 import unittest
+import numpy as np
 import xarray as xr
 
 import ctsm_py.mark_crops_invalid as mci
@@ -56,3 +57,19 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         )
         with self.assertRaises(NotImplementedError):
             mci._pft_or_patch(ds)
+
+    def test_get_huifrac(self):
+        """
+        Test that _get_huifrac() replaces values as expected
+        """
+        huifrac_in = np.array([np.nan, 1, 0.5, 0.2])
+        huifrac_target = np.array([1, 1, 0.5, 0.2])
+        gddharv_in = np.array([0, 1987, 2012, 2016.4])
+        ds = xr.Dataset(
+            data_vars={
+            mci.DEFAULT_VAR_DICT["huifrac_var"]: xr.DataArray(data=huifrac_in),
+            mci.DEFAULT_VAR_DICT["gddharv_var"]: xr.DataArray(data=gddharv_in),
+            }
+        )
+        huifrac_out = mci._get_huifrac(ds)
+        self.assertTrue(np.array_equal(huifrac_out, huifrac_target))
