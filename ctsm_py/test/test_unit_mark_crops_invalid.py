@@ -16,6 +16,10 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
     Class to unit-test mark_crops_invalid.py
     """
 
+    def setUp(self):
+        self.huifrac_var = mci.DEFAULT_VAR_DICT["huifrac_var"]
+        self.gddharv_var = mci.DEFAULT_VAR_DICT["gddharv_var"]
+
     def test_pft_or_patch_patch(self):
         """
         Test that _pft_or_patch() works for patch-dimensioned Dataset
@@ -67,9 +71,67 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         gddharv_in = np.array([0, 1987, 2012, 2016.4])
         ds = xr.Dataset(
             data_vars={
-            mci.DEFAULT_VAR_DICT["huifrac_var"]: xr.DataArray(data=huifrac_in),
-            mci.DEFAULT_VAR_DICT["gddharv_var"]: xr.DataArray(data=gddharv_in),
+                self.huifrac_var: xr.DataArray(data=huifrac_in),
+                self.gddharv_var: xr.DataArray(data=gddharv_in),
             }
         )
         huifrac_out = mci._get_huifrac(ds)
         self.assertTrue(np.array_equal(huifrac_out, huifrac_target))
+
+    def test_get_isimip3_min_hui_patch0th(self):
+        """
+        Test that _get_isimip3_min_hui() works as expected when patch is on 0th dimension
+        """
+        n_patch = 4
+        n_time = 2
+        shape = (n_patch, n_time)
+        huifrac_in = np.empty(shape)
+        huifrac_in_da = xr.DataArray(data=huifrac_in, dims=["patch", "time"])
+        vegstr = ["corn", "wheat", "soy", "rice"]
+        vegstr_da = xr.DataArray(data=vegstr, dims=["patch"])
+        ds = xr.Dataset(
+            data_vars={
+                self.huifrac_var: huifrac_in_da,
+                "patches1d_itype_veg_str": vegstr_da,
+            }
+        )
+
+        # Check that you've set things up right
+        self.assertTupleEqual(huifrac_in.shape, shape)
+        self.assertTrue("patch" in ds.dims)
+        self.assertTrue("time" in ds.dims)
+
+        # Expect 0.8 where corn, 0.9 elsewhere
+        target = np.array([[0.8, 0.8], [0.9, 0.9], [0.9, 0.9], [0.9, 0.9]])
+
+        result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
+        self.assertTrue(np.array_equal(result, target))
+
+    def test_get_isimip3_min_hui_pftlast(self):
+        """
+        Test that _get_isimip3_min_hui() works as expected when pft is on last dimension
+        """
+        n_pft = 4
+        n_time = 2
+        shape = (n_time, n_pft)
+        huifrac_in = np.empty(shape)
+        huifrac_in_da = xr.DataArray(data=huifrac_in, dims=["time", "pft"])
+        vegstr = ["corn", "wheat", "soy", "rice"]
+        vegstr_da = xr.DataArray(data=vegstr, dims=["pft"])
+        ds = xr.Dataset(
+            data_vars={
+                self.huifrac_var: huifrac_in_da,
+                "pfts1d_itype_veg_str": vegstr_da,
+            }
+        )
+
+        # Check that you've set things up right
+        self.assertTupleEqual(huifrac_in.shape, shape)
+        self.assertTrue("pft" in ds.dims)
+        self.assertTrue("time" in ds.dims)
+
+        # Expect 0.8 where corn, 0.9 elsewhere
+        target = np.array([[0.8, 0.9, 0.9, 0.9], [0.8, 0.9, 0.9, 0.9]])
+
+        result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
+        self.assertTrue(np.array_equal(result, target))
