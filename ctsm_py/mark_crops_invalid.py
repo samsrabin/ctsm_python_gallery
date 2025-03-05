@@ -41,26 +41,34 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var):
 
 
 def _pft_or_patch(ds):
-    if all(x in ds for x in ["patches1d_itype_veg_str", "pfts1d_itype_veg_str"]):
+    if all(x in ds.dims for x in ["patch", "pft"]):
         raise NotImplementedError(
-            "Both patches1d_itype_veg_str and pfts1d_itype_veg_str found in ds"
+            "Both patch and pft found in ds.dims"
         )
-    if "patches1d_itype_veg_str" in ds:
+    if "patch" in ds.dims:
         pftpatch_dimname = "patch"
-        itype_veg_str_varname = "patches1d_itype_veg_str"
-    elif "pfts1d_itype_veg_str" in ds:
+    elif "pft" in ds.dims:
         pftpatch_dimname = "pft"
+    else:
+        raise KeyError("Neither patch nor pft found in ds.dims")
+    return pftpatch_dimname
+
+def _get_itype_veg_str_varname(pftpatch_dimname):
+    if pftpatch_dimname == "patch":
+        itype_veg_str_varname = "patches1d_itype_veg_str"
+    elif pftpatch_dimname == "pft":
         itype_veg_str_varname = "pfts1d_itype_veg_str"
     else:
-        raise KeyError("Neither patches1d_itype_veg_str nor pfts1d_itype_veg_str found in ds")
-    return pftpatch_dimname, itype_veg_str_varname
+        raise NotImplementedError(f"No itype_veg_str_varname for dim {pftpatch_dimname}.")
+    return itype_veg_str_varname
 
 
 def _get_isimip3_min_hui(ds, huifrac_var):
     corn_value = 0.8  # Lower than other crops to account for silage maize harvest
     other_value = 0.9
 
-    pftpatch_dimname, itype_veg_str_varname = _pft_or_patch(ds)
+    pftpatch_dimname = _pft_or_patch(ds)
+    itype_veg_str_varname = _get_itype_veg_str_varname(pftpatch_dimname)
 
     min_viable_hui_touse = np.full_like(ds[huifrac_var].values, fill_value=other_value)
     for veg_str in np.unique(ds[itype_veg_str_varname].values):
@@ -120,7 +128,7 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
     xarray.DataArray: DataArray with invalid yields set to zero.
     """
     tmp_ra = da_in.copy().values
-    _, itype_veg_str_varname = _pft_or_patch(ds)
+    itype_veg_str_varname = _get_itype_veg_str_varname(_pft_or_patch(ds))
     for veg_str in np.unique(ds[itype_veg_str_varname].values):
         mxmat_veg_str = veg_str.replace("soybean", "temperate_soybean").replace(
             "tropical_temperate", "tropical"

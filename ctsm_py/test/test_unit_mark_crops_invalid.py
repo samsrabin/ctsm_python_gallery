@@ -25,28 +25,26 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         """
         Test that _pft_or_patch() works for patch-dimensioned Dataset
         """
-        var_name = "patches1d_itype_veg_str"
-        ds = xr.Dataset(data_vars={var_name: xr.DataArray})
-        pftpatch_dimname, itype_veg_str_varname = mci._pft_or_patch(ds)
+        da = xr.DataArray(data=[[1, 2], [3, 4]], dims=["patch", "time"])
+        ds = xr.Dataset(data_vars={"test_var": da})
+        pftpatch_dimname = mci._pft_or_patch(ds)
         self.assertEqual(pftpatch_dimname, "patch")
-        self.assertEqual(itype_veg_str_varname, var_name)
 
     def test_pft_or_patch_pft(self):
         """
         Test that _pft_or_patch() works for pft-dimensioned Dataset
         """
-        var_name = "pfts1d_itype_veg_str"
-        ds = xr.Dataset(data_vars={var_name: xr.DataArray})
-        pftpatch_dimname, itype_veg_str_varname = mci._pft_or_patch(ds)
+        da = xr.DataArray(data=[[1, 2], [3, 4]], dims=["pft", "time"])
+        ds = xr.Dataset(data_vars={"test_var": da})
+        pftpatch_dimname = mci._pft_or_patch(ds)
         self.assertEqual(pftpatch_dimname, "pft")
-        self.assertEqual(itype_veg_str_varname, var_name)
 
     def test_pft_or_patch_error_neither(self):
         """
         Test that _pft_or_patch() errors if neither patch nor pft is found
         """
-        var_name = "abc123"
-        ds = xr.Dataset(data_vars={var_name: xr.DataArray})
+        da = xr.DataArray(data=[[1, 2], [3, 4]], dims=["grid", "time"])
+        ds = xr.Dataset(data_vars={"test_var": da})
         with self.assertRaises(KeyError):
             mci._pft_or_patch(ds)
 
@@ -54,12 +52,8 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         """
         Test that _pft_or_patch() errors if both patch and pft are found
         """
-        ds = xr.Dataset(
-            data_vars={
-                "patches1d_itype_veg_str": xr.DataArray,
-                "pfts1d_itype_veg_str": xr.DataArray,
-            }
-        )
+        da = xr.DataArray(data=[[1, 2], [3, 4]], dims=["pft", "patch"])
+        ds = xr.Dataset(data_vars={"test_var": da})
         with self.assertRaises(NotImplementedError):
             mci._pft_or_patch(ds)
 
@@ -204,9 +198,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
 
         min_viable_hui = 0.7
 
-        da_out = mci.mark_invalid_hui_too_low(
-            da_in, ds[self.huifrac_var], min_viable_hui
-        )
+        da_out = mci.mark_invalid_hui_too_low(da_in, ds[self.huifrac_var], min_viable_hui)
         target = np.array([[0, 2, 0, 4], [0, 6, 0, 0]])
 
         self.assertTrue(np.array_equal(da_out.values, target))
@@ -253,9 +245,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
             "rice": 1,
         }
 
-        da_out = mci.mark_invalid_season_too_long(
-            ds, da_in, mxmats, self.gslen_var
-        )
+        da_out = mci.mark_invalid_season_too_long(ds, da_in, mxmats, self.gslen_var)
         target = np.array([[1, 2, 3, 0], [0, 6, 7, 0]])
 
         try:
