@@ -42,6 +42,10 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
 
 
 def _pft_or_patch(ds):
+    if all(x in ds for x in ["patches1d_itype_veg_str", "pfts1d_itype_veg_str"]):
+        raise NotImplementedError(
+            "Both patches1d_itype_veg_str and pfts1d_itype_veg_str found in ds"
+        )
     if "patches1d_itype_veg_str" in ds:
         pftpatch_str = "patch"
         pftpatch_var = "patches1d_itype_veg_str"
@@ -50,11 +54,11 @@ def _pft_or_patch(ds):
         pftpatch_var = "pfts1d_itype_veg_str"
     else:
         raise KeyError("Neither patches1d_itype_veg_str nor pfts1d_itype_veg_str found in ds")
-    return pftpatch_str,pftpatch_var
+    return pftpatch_str, pftpatch_var
 
 
 def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
-    corn_value = 0.8   # Lower than other crops to account for silage maize harvest
+    corn_value = 0.8  # Lower than other crops to account for silage maize harvest
     other_value = 0.9
 
     pftpatch_str, pftpatch_var = _pft_or_patch(ds)
@@ -125,7 +129,7 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
         mxmat = mxmats[mxmat_veg_str]
         tmp_ra[np.where((ds[pftpatch_var].values == veg_str) & (ds[gslen_var].values > mxmat))] = (
             invalid_value
-            )
+        )
     da_out = xr.DataArray(data=tmp_ra, coords=da_in.coords, attrs=da_in.attrs)
     return da_out
 
