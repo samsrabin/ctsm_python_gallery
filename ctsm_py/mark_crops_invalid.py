@@ -124,7 +124,7 @@ def mark_invalid_hui_too_low(da_in, huifrac, min_viable_hui_touse, invalid_value
     return da_out
 
 
-def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
+def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0, this_pft=None):
     """
     Mark invalid yields where season length is too long.
 
@@ -138,17 +138,27 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
     xarray.DataArray: DataArray with invalid yields set to zero.
     """
     tmp_ra = da_in.copy().values
-    itype_veg_str_varname = _get_itype_veg_str_varname(_pft_or_patch(ds))
-    for veg_str in np.unique(ds[itype_veg_str_varname].values):
-        mxmat_veg_str = (
-            veg_str.replace("soybean", "temperate_soybean")
-            .replace("tropical_temperate", "tropical")
-            .replace("temperate_temperate", "temperate")
-        )
-        mxmat = mxmats[mxmat_veg_str]
-        tmp_ra[
-            np.where((ds[itype_veg_str_varname].values == veg_str) & (ds[gslen_var].values > mxmat))
-        ] = invalid_value
+
+    # Handle the simple case where we've given one specific PFT
+    if this_pft is not None:
+        mxmat = mxmats[this_pft]
+        tmp_ra[np.where(ds[gslen_var].values > mxmat)] = invalid_value
+
+    # Handle cases where we need to look through all PFTs
+    else:
+        itype_veg_str_varname = _get_itype_veg_str_varname(_pft_or_patch(ds))
+        for veg_str in np.unique(ds[itype_veg_str_varname].values):
+            mxmat_veg_str = (
+                veg_str.replace("soybean", "temperate_soybean")
+                .replace("tropical_temperate", "tropical")
+                .replace("temperate_temperate", "temperate")
+            )
+            mxmat = mxmats[mxmat_veg_str]
+            where_invalid = np.where(
+                (ds[itype_veg_str_varname].values == veg_str) & (ds[gslen_var].values > mxmat)
+            )
+            tmp_ra[where_invalid] = invalid_value
+
     da_out = xr.DataArray(data=tmp_ra, coords=da_in.coords, attrs=da_in.attrs)
     return da_out
 
