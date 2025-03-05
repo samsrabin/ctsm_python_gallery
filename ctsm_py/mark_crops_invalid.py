@@ -124,7 +124,7 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
     for veg_str in np.unique(ds[pftpatch_var].values):
         mxmat_veg_str = veg_str.replace("soybean", "temperate_soybean").replace(
             "tropical_temperate", "tropical"
-        )
+        ).replace("temperate_temperate", "temperate")
         mxmat = mxmats[mxmat_veg_str]
         tmp_ra[np.where((ds[pftpatch_var].values == veg_str) & (ds[gslen_var].values > mxmat))] = (
             invalid_value
