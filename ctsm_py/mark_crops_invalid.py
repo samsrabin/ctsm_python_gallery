@@ -66,7 +66,7 @@ def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
             min_viable_hui_touse[..., is_thistype] = corn_value
         else:
             # Need patch to be either first or last dimension to allow use of ellipses
-            raise RuntimeError(
+            raise NotImplementedError(
                 f"Temporarily rearrange min_viable_hui_touse so that {pftpatch_str} dimension is"
                 f" first (0) or last ({ds[huifrac_var].ndim - 1}), instead of"
                 f" {pftpatch_index}."
