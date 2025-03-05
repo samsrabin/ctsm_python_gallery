@@ -31,7 +31,7 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var):
     if min_viable_hui in ["isimip3", "ggcmi3"]:
         min_viable_hui_touse = _get_isimip3_min_hui(ds, huifrac_var)
     elif isinstance(min_viable_hui, str):
-        raise RuntimeError(
+        raise NotImplementedError(
             f"min_viable_hui {min_viable_hui} not recognized. Accepted strings are ggcmi3 or"
             " isimip3"
         )

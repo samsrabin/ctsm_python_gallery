@@ -107,9 +107,9 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
         self.assertTrue(np.array_equal(result, target))
 
-    def test_get_isimip3_min_hui_pftlast(self):
+    def setup_huifrac_ds_pftlast(self):
         """
-        Test that _get_isimip3_min_hui() works as expected when pft is on last dimension
+        Set up Dataset for huifrac testing with pft in last dimension
         """
         n_pft = 4
         n_time = 2
@@ -133,5 +133,49 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         # Expect 0.8 where corn, 0.9 elsewhere
         target = np.array([[0.8, 0.9, 0.9, 0.9], [0.8, 0.9, 0.9, 0.9]])
 
+        return ds, target
+
+    def test_get_isimip3_min_hui_pftlast(self):
+        """
+        Test that _get_isimip3_min_hui() works as expected when pft is on last dimension
+        """
+        ds, target = self.setup_huifrac_ds_pftlast()
+
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
         self.assertTrue(np.array_equal(result, target))
+
+    def test_get_min_viable_hui_number(self):
+        """
+        Test that _get_min_viable_hui() returns min_viable_hui if it's a number
+        """
+        dummy_ds = xr.Dataset()
+        min_viable_hui = 0.87
+        self.assertEqual(
+            mci._get_min_viable_hui(dummy_ds, min_viable_hui, self.huifrac_var), min_viable_hui
+        )
+
+    def test_get_min_viable_hui_isimip3(self):
+        """
+        Test that _get_min_viable_hui() returns min_viable_hui if it's "isimip3"
+        """
+        ds, target = self.setup_huifrac_ds_pftlast()
+        self.assertTrue(
+            np.array_equal(mci._get_min_viable_hui(ds, "isimip3", self.huifrac_var), target)
+        )
+
+    def test_get_min_viable_hui_ggcmi3(self):
+        """
+        Test that _get_min_viable_hui() returns min_viable_hui if it's "ggcmi3"
+        """
+        ds, target = self.setup_huifrac_ds_pftlast()
+        self.assertTrue(
+            np.array_equal(mci._get_min_viable_hui(ds, "ggcmi3", self.huifrac_var), target)
+        )
+
+    def test_get_min_viable_hui_error(self):
+        """
+        Test that _get_min_viable_hui() errors for invalid min_viable_hui
+        """
+        dummy_ds = xr.Dataset()
+        with self.assertRaises(NotImplementedError):
+            mci._get_min_viable_hui(dummy_ds, "abc123", self.huifrac_var)
