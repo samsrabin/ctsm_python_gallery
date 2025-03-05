@@ -30,25 +30,7 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
     numpy.ndarray: Minimum viable HUI values to use.
     """
     if min_viable_hui in ["isimip3", "ggcmi3"]:
-        corn_value = 0.8
-        other_value = 0.9
-        min_viable_hui_touse = np.full_like(huifrac, fill_value=other_value)
-        for veg_str in np.unique(ds.patches1d_itype_veg_str.values):
-            if "corn" not in veg_str:
-                continue
-            is_thistype = np.where((ds.patches1d_itype_veg_str.values == veg_str))[0]
-            patch_index = list(ds[huifrac_var].dims).index("patch")
-            if patch_index == 0:
-                min_viable_hui_touse[is_thistype, ...] = corn_value
-            elif patch_index == ds[huifrac_var].ndim - 1:
-                min_viable_hui_touse[..., is_thistype] = corn_value
-            else:
-                # Need patch to be either first or last dimension to allow use of ellipses
-                raise RuntimeError(
-                    "Temporarily rearrange min_viable_hui_touse so that patch dimension is"
-                    f" first (0) or last ({ds[huifrac_var].ndim - 1}), instead of"
-                    f" {patch_index}."
-                )
+        min_viable_hui_touse = _get_isimip3_min_hui(ds, huifrac_var, huifrac)
     elif isinstance(min_viable_hui, str):
         raise RuntimeError(
             f"min_viable_hui {min_viable_hui} not recognized. Accepted strings are ggcmi3 or"
@@ -56,6 +38,39 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
         )
     else:
         min_viable_hui_touse = min_viable_hui
+    return min_viable_hui_touse
+
+
+def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
+    corn_value = 0.8
+    other_value = 0.9
+
+    if "patches1d_itype_veg_str" in ds:
+        pftpatch_str = "patch"
+        pftpatch_var = "patches1d_itype_veg_str"
+    elif "pfts1d_itype_veg_str" in ds:
+        pftpatch_str = "pft"
+        pftpatch_var = "pfts1d_itype_veg_str"
+    else:
+        raise KeyError("Neither patches1d_itype_veg_str nor pfts1d_itype_veg_str found in ds")
+
+    min_viable_hui_touse = np.full_like(huifrac, fill_value=other_value)
+    for veg_str in np.unique(ds[pftpatch_var].values):
+        if "corn" not in veg_str:
+            continue
+        is_thistype = np.where((ds[pftpatch_var].values == veg_str))[0]
+        pftpatch_index = list(ds[huifrac_var].dims).index(pftpatch_str)
+        if pftpatch_index == 0:
+            min_viable_hui_touse[is_thistype, ...] = corn_value
+        elif pftpatch_index == ds[huifrac_var].ndim - 1:
+            min_viable_hui_touse[..., is_thistype] = corn_value
+        else:
+            # Need patch to be either first or last dimension to allow use of ellipses
+            raise RuntimeError(
+                f"Temporarily rearrange min_viable_hui_touse so that {pftpatch_str} dimension is"
+                f" first (0) or last ({ds[huifrac_var].ndim - 1}), instead of"
+                f" {pftpatch_index}."
+            )
     return min_viable_hui_touse
 
 
