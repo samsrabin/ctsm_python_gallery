@@ -59,7 +59,7 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
     return min_viable_hui_touse
 
 
-def mark_invalid_hui_too_low(da_in, huifrac, min_viable_hui_touse):
+def mark_invalid_hui_too_low(da_in, huifrac, min_viable_hui_touse, invalid_value=0):
     """
     Mark yields as invalid where HUI is too low.
 
@@ -74,7 +74,7 @@ def mark_invalid_hui_too_low(da_in, huifrac, min_viable_hui_touse):
     tmp_da = da_in.copy()
     tmp = tmp_da.copy().values
     dont_include = (huifrac < min_viable_hui_touse) & (tmp > 0)
-    tmp[np.where(dont_include)] = 0
+    tmp[np.where(dont_include)] = invalid_value
     # if "MATURE" in out_var:
     #     tmp[np.where(~dont_include & ~np.isnan(tmp))] = 1
     #     tmp_da.attrs["units"] = "fraction"
@@ -82,7 +82,7 @@ def mark_invalid_hui_too_low(da_in, huifrac, min_viable_hui_touse):
     return da_out
 
 
-def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var):
+def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
     """
     Mark invalid yields where season length is too long.
 
@@ -105,14 +105,14 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var):
             np.where(
                 (ds.patches1d_itype_veg_str.values == veg_str) & (ds[gslen_var].values > mxmat)
             )
-        ] = 0
+        ] = invalid_value
     da_out = xr.DataArray(data=tmp_ra, coords=da_in.coords, attrs=da_in.attrs)
     return da_out
 
 
 def mark_crops_invalid(
-    ds, in_var="YIELD", min_viable_hui=None, mxmats=None, var_dict=DEFAULT_VAR_DICT
-):
+    ds, in_var="YIELD", min_viable_hui=None, mxmats=None, var_dict=DEFAULT_VAR_DICT, invalid_value=0
+):  # pylint: disable=too-many-positional-arguments
     """
     Mark a variable as invalid where minimum viable HUI wasn't reached or season was longer than
     maximum allowed length.
@@ -139,12 +139,16 @@ def mark_crops_invalid(
             ds, min_viable_hui, var_dict["huifrac_var"], huifrac
         )
         if np.any(huifrac < min_viable_hui_touse):
-            da_out = mark_invalid_hui_too_low(da_out, huifrac, min_viable_hui_touse)
+            da_out = mark_invalid_hui_too_low(
+                da_out, huifrac, min_viable_hui_touse, invalid_value=invalid_value
+            )
         da_out.attrs["min_viable_hui"] = min_viable_hui
 
     # Get variants with values set to 0 if season was longer than CLM PFT parameter mxmat
     if mxmat_limited:
-        da_out = mark_invalid_season_too_long(ds, da_out, mxmats, var_dict["gslen_var"])
+        da_out = mark_invalid_season_too_long(
+            ds, da_out, mxmats, var_dict["gslen_var"], invalid_value=invalid_value
+        )
 
     # Save details
     if min_viable_hui or mxmat_limited:
