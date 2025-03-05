@@ -19,6 +19,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
     def setUp(self):
         self.huifrac_var = mci.DEFAULT_VAR_DICT["huifrac_var"]
         self.gddharv_var = mci.DEFAULT_VAR_DICT["gddharv_var"]
+        self.gslen_var = mci.DEFAULT_VAR_DICT["gslen_var"]
 
     def test_pft_or_patch_patch(self):
         """
@@ -231,3 +232,69 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         target = np.array([[np.nan, 2, np.nan, 4], [np.nan, 6, np.nan, np.nan]])
 
         self.assertTrue(np.array_equal(da_out.values, target, equal_nan=True))
+
+    def test_mark_invalid_season_too_long(self):
+        """
+        Test mark_invalid_season_too_long() with default invalid_value
+        """
+        ds, _ = self.setup_minviablehui_ds_pftlast()
+        da_in = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+            dims=ds[self.huifrac_var].dims,
+            coords=ds[self.huifrac_var].coords,
+            attrs=ds[self.huifrac_var].attrs,
+        )
+        ds[self.gslen_var] = da_in.copy()
+
+        mxmats = {
+            "corn": 3,
+            "wheat": 6,
+            "soy": 15,
+            "rice": 1,
+        }
+
+        da_out = mci.mark_invalid_season_too_long(
+            ds, da_in, mxmats, self.gslen_var
+        )
+        target = np.array([[1, 2, 3, 0], [0, 6, 7, 0]])
+
+        try:
+            self.assertTrue(np.array_equal(da_out.values, target))
+        except AssertionError as e:
+            print(" ")
+            print(f"result:\n{da_out.values}")
+            print(f"target:\n{target}")
+            raise e
+
+    def test_mark_invalid_season_too_long_neg1(self):
+        """
+        Test mark_invalid_season_too_long() with invalid_value=-1
+        """
+        ds, _ = self.setup_minviablehui_ds_pftlast()
+        da_in = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+            dims=ds[self.huifrac_var].dims,
+            coords=ds[self.huifrac_var].coords,
+            attrs=ds[self.huifrac_var].attrs,
+        )
+        ds[self.gslen_var] = da_in.copy()
+
+        mxmats = {
+            "corn": 3,
+            "wheat": 6,
+            "soy": 15,
+            "rice": 1,
+        }
+
+        da_out = mci.mark_invalid_season_too_long(
+            ds, da_in, mxmats, self.gslen_var, invalid_value=-1
+        )
+        target = np.array([[1, 2, 3, -1], [-1, 6, 7, -1]])
+
+        try:
+            self.assertTrue(np.array_equal(da_out.values, target))
+        except AssertionError as e:
+            print(" ")
+            print(f"result:\n{da_out.values}")
+            print(f"target:\n{target}")
+            raise e
