@@ -46,29 +46,29 @@ def _pft_or_patch(ds):
             "Both patches1d_itype_veg_str and pfts1d_itype_veg_str found in ds"
         )
     if "patches1d_itype_veg_str" in ds:
-        pftpatch_str = "patch"
-        pftpatch_var = "patches1d_itype_veg_str"
+        pftpatch_dimname = "patch"
+        itype_veg_str_varname = "patches1d_itype_veg_str"
     elif "pfts1d_itype_veg_str" in ds:
-        pftpatch_str = "pft"
-        pftpatch_var = "pfts1d_itype_veg_str"
+        pftpatch_dimname = "pft"
+        itype_veg_str_varname = "pfts1d_itype_veg_str"
     else:
         raise KeyError("Neither patches1d_itype_veg_str nor pfts1d_itype_veg_str found in ds")
-    return pftpatch_str, pftpatch_var
+    return pftpatch_dimname, itype_veg_str_varname
 
 
 def _get_isimip3_min_hui(ds, huifrac_var):
     corn_value = 0.8  # Lower than other crops to account for silage maize harvest
     other_value = 0.9
 
-    pftpatch_str, pftpatch_var = _pft_or_patch(ds)
+    pftpatch_dimname, itype_veg_str_varname = _pft_or_patch(ds)
 
     min_viable_hui_touse = np.full_like(ds[huifrac_var].values, fill_value=other_value)
-    for veg_str in np.unique(ds[pftpatch_var].values):
+    for veg_str in np.unique(ds[itype_veg_str_varname].values):
         if "corn" not in veg_str:
             # Skip, because the min_viable_hui_touse array is already set to other_value there
             continue
-        is_thistype = np.where((ds[pftpatch_var].values == veg_str))[0]
-        pftpatch_index = list(ds[huifrac_var].dims).index(pftpatch_str)
+        is_thistype = np.where((ds[itype_veg_str_varname].values == veg_str))[0]
+        pftpatch_index = list(ds[huifrac_var].dims).index(pftpatch_dimname)
         if pftpatch_index == 0:
             min_viable_hui_touse[is_thistype, ...] = corn_value
         elif pftpatch_index == ds[huifrac_var].ndim - 1:
@@ -76,7 +76,7 @@ def _get_isimip3_min_hui(ds, huifrac_var):
         else:
             # Need patch to be either first or last dimension to allow use of ellipses
             raise NotImplementedError(
-                f"Temporarily rearrange min_viable_hui_touse so that {pftpatch_str} dimension is"
+                f"Temporarily rearrange min_viable_hui_touse so that {pftpatch_dimname} dimension is"
                 f" first (0) or last ({ds[huifrac_var].ndim - 1}), instead of"
                 f" {pftpatch_index}."
             )
@@ -120,13 +120,13 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
     xarray.DataArray: DataArray with invalid yields set to zero.
     """
     tmp_ra = da_in.copy().values
-    _, pftpatch_var = _pft_or_patch(ds)
-    for veg_str in np.unique(ds[pftpatch_var].values):
+    _, itype_veg_str_varname = _pft_or_patch(ds)
+    for veg_str in np.unique(ds[itype_veg_str_varname].values):
         mxmat_veg_str = veg_str.replace("soybean", "temperate_soybean").replace(
             "tropical_temperate", "tropical"
         ).replace("temperate_temperate", "temperate")
         mxmat = mxmats[mxmat_veg_str]
-        tmp_ra[np.where((ds[pftpatch_var].values == veg_str) & (ds[gslen_var].values > mxmat))] = (
+        tmp_ra[np.where((ds[itype_veg_str_varname].values == veg_str) & (ds[gslen_var].values > mxmat))] = (
             invalid_value
         )
     da_out = xr.DataArray(data=tmp_ra, coords=da_in.coords, attrs=da_in.attrs)

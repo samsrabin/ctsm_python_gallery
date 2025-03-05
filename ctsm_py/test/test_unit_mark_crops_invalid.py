@@ -27,9 +27,9 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         """
         var_name = "patches1d_itype_veg_str"
         ds = xr.Dataset(data_vars={var_name: xr.DataArray})
-        pftpatch_str, pftpatch_var = mci._pft_or_patch(ds)
-        self.assertEqual(pftpatch_str, "patch")
-        self.assertEqual(pftpatch_var, var_name)
+        pftpatch_dimname, itype_veg_str_varname = mci._pft_or_patch(ds)
+        self.assertEqual(pftpatch_dimname, "patch")
+        self.assertEqual(itype_veg_str_varname, var_name)
 
     def test_pft_or_patch_pft(self):
         """
@@ -37,9 +37,9 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         """
         var_name = "pfts1d_itype_veg_str"
         ds = xr.Dataset(data_vars={var_name: xr.DataArray})
-        pftpatch_str, pftpatch_var = mci._pft_or_patch(ds)
-        self.assertEqual(pftpatch_str, "pft")
-        self.assertEqual(pftpatch_var, var_name)
+        pftpatch_dimname, itype_veg_str_varname = mci._pft_or_patch(ds)
+        self.assertEqual(pftpatch_dimname, "pft")
+        self.assertEqual(itype_veg_str_varname, var_name)
 
     def test_pft_or_patch_error_neither(self):
         """
