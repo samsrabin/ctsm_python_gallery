@@ -17,7 +17,20 @@ DEFAULT_VAR_DICT = MappingProxyType(
 
 
 def zero_immatures(ds, in_var="YIELD", min_viable_hui=None, mxmats=None, var_dict=DEFAULT_VAR_DICT):
+    """
+    Mark a variable as invalid where minimum viable HUI wasn't reached or season was longer than
+    maximum allowed length.
 
+    Parameters:
+    ds (xarray.Dataset): Input dataset.
+    in_var (str): Variable name for yield. Default is "YIELD".
+    min_viable_hui (float or str): Minimum viable HUI value or a string identifier.
+    mxmats (dict): Dictionary of maximum allowed season length. Format: {"crop": value}.
+    var_dict (dict): Dictionary of variable names.
+
+    Returns:
+    xarray.DataArray: DataArray with invalid yields set to zero.
+    """
     mxmat_limited = bool(mxmats)
 
     da_out = ds[in_var].copy()
@@ -46,6 +59,17 @@ def zero_immatures(ds, in_var="YIELD", min_viable_hui=None, mxmats=None, var_dic
 
 
 def _mark_invalid_hui_too_low(da_in, huifrac, min_viable_hui_touse):
+    """
+    Mark yields as invalid where HUI is too low.
+
+    Parameters:
+    da_in (xarray.DataArray): Input DataArray.
+    huifrac (numpy.ndarray): HUI fraction values.
+    min_viable_hui_touse (numpy.ndarray): Minimum viable HUI values to use.
+
+    Returns:
+    xarray.DataArray: DataArray with invalid yields set to zero.
+    """
     tmp_da = da_in.copy()
     tmp = tmp_da.copy().values
     dont_include = (huifrac < min_viable_hui_touse) & (tmp > 0)
@@ -58,6 +82,18 @@ def _mark_invalid_hui_too_low(da_in, huifrac, min_viable_hui_touse):
 
 
 def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
+    """
+    Get minimum viable HUI values.
+
+    Parameters:
+    ds (xarray.Dataset): Input dataset.
+    min_viable_hui (float or str): Minimum viable HUI value or a string identifier.
+    huifrac_var (str): Variable name for HUI fraction.
+    huifrac (numpy.ndarray): HUI fraction values.
+
+    Returns:
+    numpy.ndarray: Minimum viable HUI values to use.
+    """
     if min_viable_hui in ["isimip3", "ggcmi3"]:
         corn_value = 0.8
         other_value = 0.9
@@ -89,6 +125,18 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
 
 
 def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var):
+    """
+    Mark invalid yields where season length is too long.
+
+    Parameters:
+    ds (xarray.Dataset): Input dataset.
+    da_in (xarray.DataArray): Input DataArray.
+    mxmats (dict): Dictionary of maximum allowed season length. Format: {"crop": value}.
+    gslen_var (str): Variable name for growing season length.
+
+    Returns:
+    xarray.DataArray: DataArray with invalid yields set to zero.
+    """
     tmp_ra = da_in.copy().values
     for veg_str in np.unique(ds.patches1d_itype_veg_str.values):
         mxmat_veg_str = veg_str.replace("soybean", "temperate_soybean").replace(
