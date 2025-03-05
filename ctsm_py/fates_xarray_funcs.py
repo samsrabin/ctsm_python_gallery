@@ -1,4 +1,5 @@
 """functions for using fates and xarray"""
+
 import xarray as xr
 import numpy as np
 
@@ -149,7 +150,8 @@ def scag_to_scls_by_age(scag_var, dataset):
     """function to reshape a fates multiplexed size and pft-indexed variable to one indexed by size class and pft
      first argument should be an xarray DataArray that has the FATES SCAG dimension
      second argument should be an xarray Dataset that has the FATES age dimension
-    (possibly the dataset encompassing the dataarray being transformed)                                                                                                                                                     returns an Xarray DataArray with the size and age dimensions disentangled"""
+    (possibly the dataset encompassing the dataarray being transformed)                                                                                                                                                     returns an Xarray DataArray with the size and age dimensions disentangled
+    """
     return deduplex(dataset, scag_var, "scls", "age", preserve_order=False)
 
 

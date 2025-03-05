@@ -1,4 +1,5 @@
 """utility functions"""
+
 """copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/blob/master/utils.py"""
 
 import re
@@ -1353,9 +1354,7 @@ def food_grainc_to_harvested_tons_onecrop(data_in, this_crop):
         # "miscanthus": 0.0,  # Not included in Wirsenius, but also not simulated
         "rice": 0.87,
         "soybean": 0.91,
-        "sugarcane": (
-            1 - 0.745
-        ),  # Irvine, Cane Sugar Handbook, 10th ed., 1977, P. 16
+        "sugarcane": (1 - 0.745),  # Irvine, Cane Sugar Handbook, 10th ed., 1977, P. 16
         "wheat": 0.88,
     }
 
