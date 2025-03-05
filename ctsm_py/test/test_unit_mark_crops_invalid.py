@@ -148,6 +148,68 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
         self.assertTrue(np.array_equal(result, target))
 
+    def test_get_isimip3_min_hui_corn(self):
+        """
+        Test that _get_isimip3_min_hui() works as expected when this_pft is corn
+        """
+        n_patch = 4
+        n_time = 2
+        shape = (n_patch, n_time)
+        huifrac_in = np.empty(shape)
+        huifrac_in_da = xr.DataArray(data=huifrac_in, dims=["grid", "time"])
+        ds = xr.Dataset(
+            data_vars={
+                self.huifrac_var: huifrac_in_da,
+            }
+        )
+
+        # Check that you've set things up right
+        self.assertTupleEqual(huifrac_in.shape, shape)
+        self.assertFalse("patch" in ds.dims)
+        self.assertFalse("pft" in ds.dims)
+
+        result = mci._get_isimip3_min_hui(ds, self.huifrac_var, this_pft="corn")
+        # Expect 0.8 everywhere because corn
+        target = np.array([[0.8, 0.8], [0.8, 0.8], [0.8, 0.8], [0.8, 0.8]])
+        try:
+            self.assertTrue(np.array_equal(result, target))
+        except AssertionError as e:
+            print(" ")
+            print(f"result:\n{result}")
+            print(f"target:\n{target}")
+            raise e
+
+    def test_get_isimip3_min_hui_tropicalcorn(self):
+        """
+        Test that _get_isimip3_min_hui() works as expected when this_pft is tropical_corn
+        """
+        n_patch = 4
+        n_time = 2
+        shape = (n_patch, n_time)
+        huifrac_in = np.empty(shape)
+        huifrac_in_da = xr.DataArray(data=huifrac_in, dims=["grid", "time"])
+        ds = xr.Dataset(
+            data_vars={
+                self.huifrac_var: huifrac_in_da,
+            }
+        )
+
+        # Check that you've set things up right
+        self.assertTupleEqual(huifrac_in.shape, shape)
+        self.assertFalse("patch" in ds.dims)
+        self.assertFalse("pft" in ds.dims)
+
+        result = mci._get_isimip3_min_hui(ds, self.huifrac_var, this_pft="tropical_corn")
+        # Expect 0.8 everywhere because corn
+        target = np.array([[0.8, 0.8], [0.8, 0.8], [0.8, 0.8], [0.8, 0.8]])
+        try:
+            self.assertTrue(np.array_equal(result, target))
+        except AssertionError as e:
+            print(" ")
+            print(f"result:\n{result}")
+            print(f"target:\n{target}")
+            raise e
+
     def test_get_min_viable_hui_number(self):
         """
         Test that _get_min_viable_hui() returns min_viable_hui if it's a number

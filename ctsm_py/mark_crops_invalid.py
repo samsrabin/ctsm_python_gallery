@@ -63,15 +63,26 @@ def _get_itype_veg_str_varname(pftpatch_dimname):
     return itype_veg_str_varname
 
 
-def _get_isimip3_min_hui(ds, huifrac_var):
+def _get_isimip3_min_hui(ds, huifrac_var, this_pft=None):
     corn_value = 0.8  # Lower than other crops to account for silage maize harvest
     other_value = 0.9
 
+    # Fill with other_value; will be replaced with corn_value if needed
+    min_viable_hui_touse = np.full_like(ds[huifrac_var].values, fill_value=other_value)
+
+    # Handle the simple case where we've given one specific PFT
+    if this_pft is not None:
+        if not isinstance(this_pft, str):
+            raise TypeError(f"If specified, this_pft must be str, not {type(this_pft)}")
+        if "corn" in this_pft:
+            min_viable_hui_touse[:] = corn_value
+            return min_viable_hui_touse
+
     pftpatch_dimname = _pft_or_patch(ds)
     itype_veg_str_varname = _get_itype_veg_str_varname(pftpatch_dimname)
+    pft_list = np.unique(ds[itype_veg_str_varname].values)
 
-    min_viable_hui_touse = np.full_like(ds[huifrac_var].values, fill_value=other_value)
-    for veg_str in np.unique(ds[itype_veg_str_varname].values):
+    for veg_str in pft_list:
         if "corn" not in veg_str:
             # Skip, because the min_viable_hui_touse array is already set to other_value there
             continue
