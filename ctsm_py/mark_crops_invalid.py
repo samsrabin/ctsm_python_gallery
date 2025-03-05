@@ -16,7 +16,7 @@ DEFAULT_VAR_DICT = MappingProxyType(
 )
 
 
-def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
+def _get_min_viable_hui(ds, min_viable_hui, huifrac_var):
     """
     Get minimum viable HUI values.
 
@@ -24,13 +24,12 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, huifrac):
     ds (xarray.Dataset): Input dataset.
     min_viable_hui (float or str): Minimum viable HUI value or a string identifier.
     huifrac_var (str): Variable name for HUI fraction.
-    huifrac (numpy.ndarray): HUI fraction values.
 
     Returns:
     numpy.ndarray: Minimum viable HUI values to use.
     """
     if min_viable_hui in ["isimip3", "ggcmi3"]:
-        min_viable_hui_touse = _get_isimip3_min_hui(ds, huifrac_var, huifrac)
+        min_viable_hui_touse = _get_isimip3_min_hui(ds, huifrac_var)
     elif isinstance(min_viable_hui, str):
         raise RuntimeError(
             f"min_viable_hui {min_viable_hui} not recognized. Accepted strings are ggcmi3 or"
@@ -57,13 +56,13 @@ def _pft_or_patch(ds):
     return pftpatch_str, pftpatch_var
 
 
-def _get_isimip3_min_hui(ds, huifrac_var, huifrac):
+def _get_isimip3_min_hui(ds, huifrac_var):
     corn_value = 0.8  # Lower than other crops to account for silage maize harvest
     other_value = 0.9
 
     pftpatch_str, pftpatch_var = _pft_or_patch(ds)
 
-    min_viable_hui_touse = np.full_like(huifrac, fill_value=other_value)
+    min_viable_hui_touse = np.full_like(ds[huifrac_var].values, fill_value=other_value)
     for veg_str in np.unique(ds[pftpatch_var].values):
         if "corn" not in veg_str:
             # Skip, because the min_viable_hui_touse array is already set to other_value there
@@ -159,7 +158,7 @@ def mark_crops_invalid(
     if min_viable_hui is not None:
         huifrac = _get_huifrac(ds, var_dict)
         min_viable_hui_touse = _get_min_viable_hui(
-            ds, min_viable_hui, var_dict["huifrac_var"], huifrac
+            ds, min_viable_hui, var_dict["huifrac_var"]
         )
         if np.any(huifrac < min_viable_hui_touse):
             da_out = mark_invalid_hui_too_low(
