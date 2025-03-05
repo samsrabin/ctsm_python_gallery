@@ -42,9 +42,7 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var):
 
 def _pft_or_patch(ds):
     if all(x in ds.dims for x in ["patch", "pft"]):
-        raise NotImplementedError(
-            "Both patch and pft found in ds.dims"
-        )
+        raise NotImplementedError("Both patch and pft found in ds.dims")
     if "patch" in ds.dims:
         pftpatch_dimname = "patch"
     elif "pft" in ds.dims:
@@ -52,6 +50,7 @@ def _pft_or_patch(ds):
     else:
         raise KeyError("Neither patch nor pft found in ds.dims")
     return pftpatch_dimname
+
 
 def _get_itype_veg_str_varname(pftpatch_dimname):
     if pftpatch_dimname == "patch":
@@ -141,13 +140,15 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0):
     tmp_ra = da_in.copy().values
     itype_veg_str_varname = _get_itype_veg_str_varname(_pft_or_patch(ds))
     for veg_str in np.unique(ds[itype_veg_str_varname].values):
-        mxmat_veg_str = veg_str.replace("soybean", "temperate_soybean").replace(
-            "tropical_temperate", "tropical"
-        ).replace("temperate_temperate", "temperate")
-        mxmat = mxmats[mxmat_veg_str]
-        tmp_ra[np.where((ds[itype_veg_str_varname].values == veg_str) & (ds[gslen_var].values > mxmat))] = (
-            invalid_value
+        mxmat_veg_str = (
+            veg_str.replace("soybean", "temperate_soybean")
+            .replace("tropical_temperate", "tropical")
+            .replace("temperate_temperate", "temperate")
         )
+        mxmat = mxmats[mxmat_veg_str]
+        tmp_ra[
+            np.where((ds[itype_veg_str_varname].values == veg_str) & (ds[gslen_var].values > mxmat))
+        ] = invalid_value
     da_out = xr.DataArray(data=tmp_ra, coords=da_in.coords, attrs=da_in.attrs)
     return da_out
 
@@ -176,9 +177,7 @@ def mark_crops_invalid(
     # Set yield to zero where minimum viable HUI wasn't reached
     if min_viable_hui is not None:
         huifrac = _get_huifrac(ds, var_dict)
-        min_viable_hui_touse = _get_min_viable_hui(
-            ds, min_viable_hui, var_dict["huifrac_var"]
-        )
+        min_viable_hui_touse = _get_min_viable_hui(ds, min_viable_hui, var_dict["huifrac_var"])
         if np.any(huifrac < min_viable_hui_touse):
             da_out = mark_invalid_hui_too_low(
                 da_out, huifrac, min_viable_hui_touse, invalid_value=invalid_value
@@ -197,6 +196,7 @@ def mark_crops_invalid(
         da_out.attrs["mxmat_limited"] = mxmat_limited
 
     return da_out
+
 
 def _get_huifrac(ds, var_dict=DEFAULT_VAR_DICT):
     huifrac = ds[var_dict["huifrac_var"]].copy().values
