@@ -110,6 +110,35 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
         self.assertTrue(np.array_equal(result, target))
 
+    def test_get_isimip3_min_hui_patchinwrongplace(self):
+        """
+        Test that _get_isimip3_min_hui() errors as expected when patch is on neither 0th nor last
+        dimension
+        """
+        n_patch = 4
+        n_harvest = 2
+        n_time = 2
+        shape = (n_harvest, n_patch, n_time)
+        huifrac_in = np.empty(shape)
+        huifrac_in_da = xr.DataArray(data=huifrac_in, dims=["harvest", "patch", "time"])
+        vegstr = ["corn", "wheat", "soy", "rice"]
+        vegstr_da = xr.DataArray(data=vegstr, dims=["patch"])
+        ds = xr.Dataset(
+            data_vars={
+                self.huifrac_var: huifrac_in_da,
+                "patches1d_itype_veg_str": vegstr_da,
+            }
+        )
+
+        # Check that you've set things up right
+        self.assertTupleEqual(huifrac_in.shape, shape)
+        self.assertTrue("harvest" in ds.dims)
+        self.assertTrue("patch" in ds.dims)
+        self.assertTrue("time" in ds.dims)
+
+        with self.assertRaises(NotImplementedError):
+            mci._get_isimip3_min_hui(ds, self.huifrac_var)
+
     def setup_minviablehui_ds_pftlast(self):
         """
         Set up Dataset and target for minimum viable HUI testing with pft in last dimension
