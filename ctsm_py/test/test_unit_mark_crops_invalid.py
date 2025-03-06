@@ -198,6 +198,16 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         target = np.array([[0.8, 0.8], [0.8, 0.8], [0.8, 0.8], [0.8, 0.8]])
         self.assertTrue(np.array_equal(result, target))
 
+    def test_get_isimip3_min_hui_badthispft(self):
+        """
+        Test that _get_isimip3_min_hui() errors as expected when given a non-string this_pft
+        """
+        dummy_ds = xr.Dataset()
+        with self.assertRaises(TypeError):
+            mci._get_isimip3_min_hui(dummy_ds, self.huifrac_var, this_pft=15)
+        with self.assertRaises(TypeError):
+            mci._get_isimip3_min_hui(dummy_ds, self.huifrac_var, this_pft=["corn"])
+
     def test_get_min_viable_hui_number(self):
         """
         Test that _get_min_viable_hui() returns min_viable_hui if it's a number
