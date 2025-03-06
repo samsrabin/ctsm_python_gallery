@@ -77,7 +77,7 @@ def _get_isimip3_min_hui(ds, huifrac_var, this_pft=None):
     if this_pft is not None:
         if "corn" in this_pft:
             min_viable_hui_touse[:] = corn_value
-            return min_viable_hui_touse
+        return min_viable_hui_touse
 
     pftpatch_dimname = _pft_or_patch(ds)
     itype_veg_str_varname = _get_itype_veg_str_varname(pftpatch_dimname)

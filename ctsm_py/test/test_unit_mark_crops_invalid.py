@@ -148,9 +148,34 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var)
         self.assertTrue(np.array_equal(result, target))
 
+    def test_get_isimip3_min_hui_soy(self):
+        """
+        Test that _get_isimip3_min_hui() works as expected when this_pft is soy. Because we want most of that function to get short-circuited, do not add a pft or patch dimension. This way, if the short-circuit doesn't happen, it will error.
+        """
+        n_patch = 4
+        n_time = 2
+        shape = (n_patch, n_time)
+        huifrac_in = np.empty(shape)
+        huifrac_in_da = xr.DataArray(data=huifrac_in, dims=["grid", "time"])
+        ds = xr.Dataset(
+            data_vars={
+                self.huifrac_var: huifrac_in_da,
+            }
+        )
+
+        # Check that you've set things up right
+        self.assertTupleEqual(huifrac_in.shape, shape)
+        self.assertFalse("patch" in ds.dims)
+        self.assertFalse("pft" in ds.dims)
+
+        result = mci._get_isimip3_min_hui(ds, self.huifrac_var, this_pft="soy")
+        # Expect 0.9 everywhere because not corn
+        target = np.array([[0.9, 0.9], [0.9, 0.9], [0.9, 0.9], [0.9, 0.9]])
+        self.assertTrue(np.array_equal(result, target))
+
     def test_get_isimip3_min_hui_corn(self):
         """
-        Test that _get_isimip3_min_hui() works as expected when this_pft is corn
+        Test that _get_isimip3_min_hui() works as expected when this_pft is corn. Because we want most of that function to get short-circuited, do not add a pft or patch dimension. This way, if the short-circuit doesn't happen, it will error.
         """
         n_patch = 4
         n_time = 2
