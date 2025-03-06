@@ -57,6 +57,13 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             mci._pft_or_patch(ds)
 
+    def test_get_itype_veg_str_varname_notimplemented(self):
+        """
+        Test that _get_itype_veg_str_varname() errors correctly when given an invalid dimension name
+        """
+        with self.assertRaises(NotImplementedError):
+            mci._get_itype_veg_str_varname("invalid dimension name")
+
     def test_get_huifrac(self):
         """
         Test that _get_huifrac() replaces values as expected
