@@ -96,7 +96,8 @@ def _get_isimip3_min_hui(ds, huifrac_var, this_pft=None):
         else:
             # Need patch to be either first or last dimension to allow use of ellipses
             raise NotImplementedError(
-                f"Temporarily rearrange min_viable_hui_touse so that {pftpatch_dimname} dimension is"
+                "Temporarily rearrange min_viable_hui_touse so that"
+                f" {pftpatch_dimname} dimension is"
                 f" first (0) or last ({ds[huifrac_var].ndim - 1}), instead of"
                 f" {pftpatch_index}."
             )
@@ -127,6 +128,7 @@ def mark_invalid_hui_too_low(da_in, huifrac, min_viable_hui_touse, invalid_value
 
 
 def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0, this_pft=None):
+    # pylint: disable=too-many-positional-arguments
     """
     Mark invalid yields where season length is too long.
 

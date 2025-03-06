@@ -9,6 +9,7 @@ import xarray as xr
 import ctsm_py.mark_crops_invalid as mci
 
 # pylint: disable=protected-access
+# pylint: disable=too-many-public-methods
 
 
 class TestUnitMarkCropsInvalid(unittest.TestCase):
@@ -157,7 +158,9 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
 
     def test_get_isimip3_min_hui_soy(self):
         """
-        Test that _get_isimip3_min_hui() works as expected when this_pft is soy. Because we want most of that function to get short-circuited, do not add a pft or patch dimension. This way, if the short-circuit doesn't happen, it will error.
+        Test that _get_isimip3_min_hui() works as expected when this_pft is soy. Because we want
+        most of that function to get short-circuited, do not add a pft or patch dimension. This way,
+        if the short-circuit doesn't happen, it will error.
         """
         n_patch = 4
         n_time = 2
@@ -182,7 +185,9 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
 
     def test_get_isimip3_min_hui_corn(self):
         """
-        Test that _get_isimip3_min_hui() works as expected when this_pft is corn. Because we want most of that function to get short-circuited, do not add a pft or patch dimension. This way, if the short-circuit doesn't happen, it will error.
+        Test that _get_isimip3_min_hui() works as expected when this_pft is corn. Because we want
+        most of that function to get short-circuited, do not add a pft or patch dimension. This way,
+        if the short-circuit doesn't happen, it will error.
         """
         n_patch = 4
         n_time = 2
