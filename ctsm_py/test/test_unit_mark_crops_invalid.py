@@ -455,6 +455,8 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         target = np.array([[1, 2, 3, 0], [0, 6, 7, 0]])
 
         self.assertTrue(np.array_equal(da_out.values, target))
+        self.assertNotIn("min_viable_hui", da_out.attrs)
+        self.assertTrue(da_out.attrs["mxmat_limited"])
 
     def test_mark_crops_invalid_just_minviablehui(self):
         """
@@ -475,6 +477,8 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=min_viable_hui, mxmats=None)
         target = np.array([[0, 2, 0, 4], [0, 6, 0, 0]])
         self.assertTrue(np.array_equal(da_out.values, target))
+        self.assertEqual(da_out.attrs["min_viable_hui"], min_viable_hui)
+        self.assertNotIn("mxmat_limited", da_out.attrs)
 
     def test_mark_crops_invalid_both(self):
         """
@@ -504,6 +508,8 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         target = np.array([[0, 2, 0, 0], [0, 6, 0, 0]])
 
         self.assertTrue(np.array_equal(da_out.values, target))
+        self.assertEqual(da_out.attrs["min_viable_hui"], min_viable_hui)
+        self.assertTrue(da_out.attrs["mxmat_limited"])
 
     def test_mark_crops_invalid_neither(self):
         """
@@ -520,3 +526,5 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=None, mxmats=None)
 
         self.assertTrue(np.array_equal(da_out.values, target))
+        self.assertNotIn("min_viable_hui", da_out.attrs)
+        self.assertNotIn("mxmat_limited", da_out.attrs)

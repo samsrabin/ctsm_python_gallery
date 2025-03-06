@@ -203,11 +203,7 @@ def mark_crops_invalid(
         da_out = mark_invalid_season_too_long(
             ds, da_out, mxmats, var_dict["gslen_var"], invalid_value=invalid_value
         )
-
-    # Save details
-    if min_viable_hui or mxmat_limited:
-        da_out.attrs["min_viable_hui"] = min_viable_hui
-        da_out.attrs["mxmat_limited"] = mxmat_limited
+        da_out.attrs["mxmat_limited"] = True
 
     return da_out
 
