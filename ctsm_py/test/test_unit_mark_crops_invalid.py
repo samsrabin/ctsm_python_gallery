@@ -493,7 +493,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         )
         ds[self.gslen_var] = da_in.copy()
         ds["test_var"] = da_in.copy()
-        
+
         mxmats = {
             "corn": 3,
             "wheat": 6,
@@ -504,7 +504,9 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         min_viable_hui = 0.7
         ds[self.gddharv_var] = xr.full_like(da_in, fill_value=1)  # Just need nonzero
 
-        da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=min_viable_hui, mxmats=mxmats)
+        da_out = mci.mark_crops_invalid(
+            ds, "test_var", min_viable_hui=min_viable_hui, mxmats=mxmats
+        )
         target = np.array([[0, 2, 0, 0], [0, 6, 0, 0]])
 
         self.assertTrue(np.array_equal(da_out.values, target))
@@ -519,9 +521,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         da_in = xr.DataArray(
             data=np.array(target),
         )
-        ds = xr.Dataset(
-            data_vars={"test_var": da_in}
-        )
+        ds = xr.Dataset(data_vars={"test_var": da_in})
 
         da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=None, mxmats=None)
 

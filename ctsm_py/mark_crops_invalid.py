@@ -198,7 +198,8 @@ def mark_crops_invalid(
             )
         da_out.attrs["min_viable_hui"] = min_viable_hui
 
-    # Get variants with values set marked as invalid if season was longer than CLM PFT parameter mxmat
+    # Get variants with values set marked as invalid if season was longer than CLM PFT parameter
+    # mxmat
     if mxmat_limited:
         da_out = mark_invalid_season_too_long(
             ds, da_out, mxmats, var_dict["gslen_var"], invalid_value=invalid_value
