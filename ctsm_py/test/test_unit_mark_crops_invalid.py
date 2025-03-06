@@ -171,13 +171,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var, this_pft="corn")
         # Expect 0.8 everywhere because corn
         target = np.array([[0.8, 0.8], [0.8, 0.8], [0.8, 0.8], [0.8, 0.8]])
-        try:
-            self.assertTrue(np.array_equal(result, target))
-        except AssertionError as e:
-            print(" ")
-            print(f"result:\n{result}")
-            print(f"target:\n{target}")
-            raise e
+        self.assertTrue(np.array_equal(result, target))
 
     def test_get_isimip3_min_hui_tropicalcorn(self):
         """
@@ -202,13 +196,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         result = mci._get_isimip3_min_hui(ds, self.huifrac_var, this_pft="tropical_corn")
         # Expect 0.8 everywhere because corn
         target = np.array([[0.8, 0.8], [0.8, 0.8], [0.8, 0.8], [0.8, 0.8]])
-        try:
-            self.assertTrue(np.array_equal(result, target))
-        except AssertionError as e:
-            print(" ")
-            print(f"result:\n{result}")
-            print(f"target:\n{target}")
-            raise e
+        self.assertTrue(np.array_equal(result, target))
 
     def test_get_min_viable_hui_number(self):
         """
@@ -310,13 +298,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         da_out = mci.mark_invalid_season_too_long(ds, da_in, mxmats, self.gslen_var)
         target = np.array([[1, 2, 3, 0], [0, 6, 7, 0]])
 
-        try:
-            self.assertTrue(np.array_equal(da_out.values, target))
-        except AssertionError as e:
-            print(" ")
-            print(f"result:\n{da_out.values}")
-            print(f"target:\n{target}")
-            raise e
+        self.assertTrue(np.array_equal(da_out.values, target))
 
     def test_mark_invalid_season_too_long_onepft(self):
         """
@@ -343,13 +325,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         )
         target = np.array([[1, 2, 3, 0], [0, 0, 0, 0]])
 
-        try:
-            self.assertTrue(np.array_equal(da_out.values, target))
-        except AssertionError as e:
-            print(" ")
-            print(f"result:\n{da_out.values}")
-            print(f"target:\n{target}")
-            raise e
+        self.assertTrue(np.array_equal(da_out.values, target))
 
     def test_mark_invalid_season_too_long_neg1(self):
         """
@@ -376,10 +352,4 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         )
         target = np.array([[1, 2, 3, -1], [-1, 6, 7, -1]])
 
-        try:
-            self.assertTrue(np.array_equal(da_out.values, target))
-        except AssertionError as e:
-            print(" ")
-            print(f"result:\n{da_out.values}")
-            print(f"target:\n{target}")
-            raise e
+        self.assertTrue(np.array_equal(da_out.values, target))
