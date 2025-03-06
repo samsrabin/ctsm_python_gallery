@@ -429,3 +429,93 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
         target = np.array([[1, 2, 3, -1], [-1, 6, 7, -1]])
 
         self.assertTrue(np.array_equal(da_out.values, target))
+
+    def test_mark_crops_invalid_just_seasonlength(self):
+        """
+        Test mark_crops_invalid() when not setting minimum viable HUI
+        """
+        ds, _ = self.setup_minviablehui_ds_pftlast()
+        da_in = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+            dims=ds[self.huifrac_var].dims,
+            coords=ds[self.huifrac_var].coords,
+            attrs=ds[self.huifrac_var].attrs,
+        )
+        ds[self.gslen_var] = da_in.copy()
+        ds["test_var"] = da_in.copy()
+
+        mxmats = {
+            "corn": 3,
+            "wheat": 6,
+            "soy": 15,
+            "rice": 1,
+        }
+
+        da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=None, mxmats=mxmats)
+        target = np.array([[1, 2, 3, 0], [0, 6, 7, 0]])
+
+        self.assertTrue(np.array_equal(da_out.values, target))
+
+    def test_mark_crops_invalid_just_minviablehui(self):
+        """
+        Test mark_crops_invalid() when not setting max season length
+        """
+        ds, _ = self.setup_minviablehui_ds_pftlast()
+        da_in = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+            dims=ds[self.huifrac_var].dims,
+            coords=ds[self.huifrac_var].coords,
+            attrs=ds[self.huifrac_var].attrs,
+        )
+        ds["test_var"] = da_in.copy()
+
+        min_viable_hui = 0.7
+        ds[self.gddharv_var] = xr.full_like(da_in, fill_value=1)  # Just need nonzero
+
+        da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=min_viable_hui, mxmats=None)
+        target = np.array([[0, 2, 0, 4], [0, 6, 0, 0]])
+
+    def test_mark_crops_invalid_both(self):
+        """
+        Test mark_crops_invalid() when setting both max season length and min viable HUI
+        """
+        ds, _ = self.setup_minviablehui_ds_pftlast()
+        da_in = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+            dims=ds[self.huifrac_var].dims,
+            coords=ds[self.huifrac_var].coords,
+            attrs=ds[self.huifrac_var].attrs,
+        )
+        ds[self.gslen_var] = da_in.copy()
+        ds["test_var"] = da_in.copy()
+        
+        mxmats = {
+            "corn": 3,
+            "wheat": 6,
+            "soy": 15,
+            "rice": 1,
+        }
+
+        min_viable_hui = 0.7
+        ds[self.gddharv_var] = xr.full_like(da_in, fill_value=1)  # Just need nonzero
+
+        da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=min_viable_hui, mxmats=mxmats)
+        target = np.array([[0, 2, 0, 0], [0, 6, 0, 0]])
+
+        self.assertTrue(np.array_equal(da_out.values, target))
+
+    def test_mark_crops_invalid_neither(self):
+        """
+        Test mark_crops_invalid() when setting neither max season length nor min viable HUI
+        """
+        target = [[1, 2, 3, 4], [5, 6, 7, 8]]
+        da_in = xr.DataArray(
+            data=np.array(target),
+        )
+        ds = xr.Dataset(
+            data_vars={"test_var": da_in}
+        )
+
+        da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=None, mxmats=None)
+
+        self.assertTrue(np.array_equal(da_out.values, target))
