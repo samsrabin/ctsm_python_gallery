@@ -474,6 +474,7 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
 
         da_out = mci.mark_crops_invalid(ds, "test_var", min_viable_hui=min_viable_hui, mxmats=None)
         target = np.array([[0, 2, 0, 4], [0, 6, 0, 0]])
+        self.assertTrue(np.array_equal(da_out.values, target))
 
     def test_mark_crops_invalid_both(self):
         """
