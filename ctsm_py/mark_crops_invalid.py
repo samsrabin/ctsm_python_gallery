@@ -168,7 +168,7 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0, 
 
 
 def mark_crops_invalid(
-    ds, in_var="YIELD", min_viable_hui=None, mxmats=None, var_dict=DEFAULT_VAR_DICT, invalid_value=0
+    ds, in_var, min_viable_hui=None, mxmats=None, var_dict=DEFAULT_VAR_DICT, invalid_value=0
 ):  # pylint: disable=too-many-positional-arguments
     """
     Mark a variable as invalid where minimum viable HUI wasn't reached or season was longer than
