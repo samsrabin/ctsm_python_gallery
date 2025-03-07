@@ -9,11 +9,31 @@ import xarray as xr
 # MappingProxyType makes this dict immutable
 DEFAULT_VAR_DICT = MappingProxyType(
     {
+        "hui_var": "HUI",
         "huifrac_var": "HUIFRAC",
         "gddharv_var": "GDDHARV",
         "gslen_var": "GSLEN",
     }
 )
+
+
+def get_huifrac(ds, var_dict=DEFAULT_VAR_DICT):
+    """
+    Given a dataset, calculate HUIFRAC as hui_var/gddharv_var
+    """
+    hui_var = var_dict["hui_var"]
+    gddharv_var = var_dict["gddharv_var"]
+
+    da_hui = ds[hui_var]
+    da_gddharv = ds[gddharv_var]
+    da_huifrac = da_hui / da_gddharv
+
+    # Handle HUIFRAC where GDDHARV (denominator) is zero
+    huifrac = _handle_huifrac_where_gddharv_0(da_huifrac, da_gddharv)
+    da_huifrac.data = huifrac
+
+    da_huifrac.attrs["units"] = "Fraction of required"
+    return da_huifrac
 
 
 def _get_min_viable_hui(ds, min_viable_hui, huifrac_var):
@@ -190,7 +210,9 @@ def mark_crops_invalid(
 
     # Mark as invalid where minimum viable HUI wasn't reached
     if min_viable_hui is not None:
-        huifrac = _get_huifrac(ds, var_dict)
+        huifrac = _handle_huifrac_where_gddharv_0(
+            ds[var_dict["huifrac_var"]], ds[var_dict["gddharv_var"]]
+        )
         min_viable_hui_touse = _get_min_viable_hui(ds, min_viable_hui, var_dict["huifrac_var"])
         if np.any(huifrac < min_viable_hui_touse):
             da_out = mark_invalid_hui_too_low(
@@ -209,9 +231,9 @@ def mark_crops_invalid(
     return da_out
 
 
-def _get_huifrac(ds, var_dict=DEFAULT_VAR_DICT):
-    huifrac = ds[var_dict["huifrac_var"]].copy().values
+def _handle_huifrac_where_gddharv_0(da_huifrac, da_gddharv):
+    huifrac = da_huifrac.values
 
     # If harvest threshold HUI is 0, mark huifrac as 1
-    huifrac[np.where(ds[var_dict["gddharv_var"]].values == 0)] = 1
+    huifrac[np.where(da_gddharv.values == 0)] = 1
     return huifrac
