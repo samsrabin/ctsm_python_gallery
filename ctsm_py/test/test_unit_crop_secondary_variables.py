@@ -41,6 +41,18 @@ class TestUnitCropSecondaryVariables(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             c2o._handle_huifrac_where_gddharv_notpos(da_huifrac_in, da_gddharv_in)
 
+    def test_handle_huifrac_where_gddharv_negative_but_nan_huifrac(self):
+        """
+        Test that _handle_huifrac_where_gddharv_notpos() errors on negative values as expected
+        """
+        huifrac_in = np.array([np.nan, np.nan, 0.5, 0.2])
+        gddharv_in = np.array([0, -1987, 2012, 2016.4])
+        da_huifrac_in = xr.DataArray(data=huifrac_in)
+        da_gddharv_in = xr.DataArray(data=gddharv_in)
+        huifrac_out = c2o._handle_huifrac_where_gddharv_notpos(da_huifrac_in, da_gddharv_in)
+        huifrac_target = np.array([1, np.nan, 0.5, 0.2])
+        self.assertTrue(np.array_equal(huifrac_out, huifrac_target, equal_nan=True))
+
     def test_get_huifrac(self):
         """
         Test get_huifrac()

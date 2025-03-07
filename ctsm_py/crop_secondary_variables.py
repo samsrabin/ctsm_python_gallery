@@ -8,8 +8,8 @@ from ctsm_py.crop_defaults import DEFAULT_VAR_DICT
 
 
 def _handle_huifrac_where_gddharv_notpos(da_huifrac, da_gddharv):
-    # Error if any GDDHARV value is negative
-    if np.any(da_gddharv < 0):
+    # Error if any GDDHARV value is negative for non-NaN HUIFRAC
+    if np.any((da_gddharv < 0) & ~np.isnan(da_huifrac)):
         raise NotImplementedError("How should negative GDDHARV affect HUIFRAC?")
 
     huifrac = da_huifrac.values
