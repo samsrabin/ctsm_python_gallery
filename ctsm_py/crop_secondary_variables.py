@@ -28,6 +28,13 @@ def get_huifrac(ds, var_dict=DEFAULT_VAR_DICT):
 
     da_hui = ds[hui_var]
     da_gddharv = ds[gddharv_var]
+
+    # Mask where both are negative (indicating no harvest)
+    both_negative = (da_hui < 0) & (da_gddharv < 0)
+    da_hui = da_hui.where(~both_negative)
+    da_gddharv = da_gddharv.where(~both_negative)
+
+    # Calculate HUIFRAC
     da_huifrac = da_hui / da_gddharv
 
     # Handle HUIFRAC where GDDHARV (denominator) is zero or negative

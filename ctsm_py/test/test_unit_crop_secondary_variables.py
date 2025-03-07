@@ -67,6 +67,32 @@ class TestUnitCropSecondaryVariables(unittest.TestCase):
         da_out = c2o.get_huifrac(ds)
         self.assertTrue(da_out.equals(target_da))
 
+    def test_get_huifrac_bothneg(self):
+        """
+        Test get_huifrac() with HUI and GDDHARV both negative
+        """
+        hui_da = xr.DataArray(
+            data=np.array([[1, 2, -3, 4], [5, 6, 7, 8]]),
+        )
+        gddharv_da = xr.DataArray(
+            data=np.array([[1, 4, -12, 4], [25, 6, 7, 8]]),
+        )
+        target_da = xr.DataArray(
+            data=np.array([[1, 0.5, np.nan, 1], [0.2, 1, 1, 1]]),
+            attrs={"units": "Fraction of required"},
+        )
+        hui_var = c2o.DEFAULT_VAR_DICT["hui_var"]
+        gddharv_var = c2o.DEFAULT_VAR_DICT["gddharv_var"]
+        ds = xr.Dataset(
+            data_vars={
+                hui_var: hui_da,
+                gddharv_var: gddharv_da,
+            }
+        )
+
+        da_out = c2o.get_huifrac(ds)
+        self.assertTrue(da_out.equals(target_da))
+
     def test_get_huifrac_customnames(self):
         """
         Test get_huifrac() with custom variable names
