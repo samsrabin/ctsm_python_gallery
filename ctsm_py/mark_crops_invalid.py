@@ -28,8 +28,8 @@ def get_huifrac(ds, var_dict=DEFAULT_VAR_DICT):
     da_gddharv = ds[gddharv_var]
     da_huifrac = da_hui / da_gddharv
 
-    # Handle HUIFRAC where GDDHARV (denominator) is zero
-    huifrac = _handle_huifrac_where_gddharv_0(da_huifrac, da_gddharv)
+    # Handle HUIFRAC where GDDHARV (denominator) is zero or negative
+    huifrac = _handle_huifrac_where_gddharv_notpos(da_huifrac, da_gddharv)
     da_huifrac.data = huifrac
 
     da_huifrac.attrs["units"] = "Fraction of required"
@@ -210,7 +210,7 @@ def mark_crops_invalid(
 
     # Mark as invalid where minimum viable HUI wasn't reached
     if min_viable_hui is not None:
-        huifrac = _handle_huifrac_where_gddharv_0(
+        huifrac = _handle_huifrac_where_gddharv_notpos(
             ds[var_dict["huifrac_var"]], ds[var_dict["gddharv_var"]]
         )
         min_viable_hui_touse = _get_min_viable_hui(ds, min_viable_hui, var_dict["huifrac_var"])
@@ -231,7 +231,11 @@ def mark_crops_invalid(
     return da_out
 
 
-def _handle_huifrac_where_gddharv_0(da_huifrac, da_gddharv):
+def _handle_huifrac_where_gddharv_notpos(da_huifrac, da_gddharv):
+    # Error if any GDDHARV value is negative
+    if np.any(da_gddharv < 0):
+        raise NotImplementedError("How should negative GDDHARV affect HUIFRAC?")
+
     huifrac = da_huifrac.values
 
     # If harvest threshold HUI is 0, mark huifrac as 1

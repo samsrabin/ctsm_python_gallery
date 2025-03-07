@@ -67,15 +67,26 @@ class TestUnitMarkCropsInvalid(unittest.TestCase):
 
     def test_handle_huifrac_where_gddharv_0(self):
         """
-        Test that _handle_huifrac_where_gddharv_0() replaces values as expected
+        Test that _handle_huifrac_where_gddharv_notpos() replaces zero values as expected
         """
         huifrac_in = np.array([np.nan, 1, 0.5, 0.2])
         huifrac_target = np.array([1, 1, 0.5, 0.2])
         gddharv_in = np.array([0, 1987, 2012, 2016.4])
         da_huifrac_in = xr.DataArray(data=huifrac_in)
         da_gddharv_in = xr.DataArray(data=gddharv_in)
-        huifrac_out = mci._handle_huifrac_where_gddharv_0(da_huifrac_in, da_gddharv_in)
+        huifrac_out = mci._handle_huifrac_where_gddharv_notpos(da_huifrac_in, da_gddharv_in)
         self.assertTrue(np.array_equal(huifrac_out, huifrac_target))
+
+    def test_handle_huifrac_where_gddharv_negative(self):
+        """
+        Test that _handle_huifrac_where_gddharv_notpos() errors on negative values as expected
+        """
+        huifrac_in = np.array([np.nan, 1, 0.5, 0.2])
+        gddharv_in = np.array([0, -1987, 2012, 2016.4])
+        da_huifrac_in = xr.DataArray(data=huifrac_in)
+        da_gddharv_in = xr.DataArray(data=gddharv_in)
+        with self.assertRaises(NotImplementedError):
+            mci._handle_huifrac_where_gddharv_notpos(da_huifrac_in, da_gddharv_in)
 
     def test_get_isimip3_min_hui_patch0th(self):
         """
