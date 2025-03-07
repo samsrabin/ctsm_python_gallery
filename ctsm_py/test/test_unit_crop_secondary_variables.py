@@ -1,0 +1,164 @@
+"""
+Module to unit-test crop_secondary_variables.py
+"""
+
+import unittest
+import numpy as np
+import xarray as xr
+
+import ctsm_py.crop_secondary_variables as c2o
+
+# pylint: disable=protected-access
+# pylint: disable=too-many-public-methods
+
+
+class TestUnitCropSecondaryVariables(unittest.TestCase):
+    """
+    Class to unit-test crop_secondary_variables.py
+    """
+
+    def test_handle_huifrac_where_gddharv_0(self):
+        """
+        Test that _handle_huifrac_where_gddharv_notpos() replaces zero values as expected
+        """
+        huifrac_in = np.array([np.nan, 1, 0.5, 0.2])
+        huifrac_target = np.array([1, 1, 0.5, 0.2])
+        gddharv_in = np.array([0, 1987, 2012, 2016.4])
+        da_huifrac_in = xr.DataArray(data=huifrac_in)
+        da_gddharv_in = xr.DataArray(data=gddharv_in)
+        huifrac_out = c2o._handle_huifrac_where_gddharv_notpos(da_huifrac_in, da_gddharv_in)
+        self.assertTrue(np.array_equal(huifrac_out, huifrac_target))
+
+    def test_handle_huifrac_where_gddharv_negative(self):
+        """
+        Test that _handle_huifrac_where_gddharv_notpos() errors on negative values as expected
+        """
+        huifrac_in = np.array([np.nan, 1, 0.5, 0.2])
+        gddharv_in = np.array([0, -1987, 2012, 2016.4])
+        da_huifrac_in = xr.DataArray(data=huifrac_in)
+        da_gddharv_in = xr.DataArray(data=gddharv_in)
+        with self.assertRaises(NotImplementedError):
+            c2o._handle_huifrac_where_gddharv_notpos(da_huifrac_in, da_gddharv_in)
+
+    def test_get_huifrac(self):
+        """
+        Test get_huifrac()
+        """
+        hui_da = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+        )
+        gddharv_da = xr.DataArray(
+            data=np.array([[1, 4, 12, 4], [25, 6, 7, 8]]),
+        )
+        target_da = xr.DataArray(
+            data=np.array([[1, 0.5, 0.25, 1], [0.2, 1, 1, 1]]),
+            attrs={"units": "Fraction of required"},
+        )
+        hui_var = c2o.DEFAULT_VAR_DICT["hui_var"]
+        gddharv_var = c2o.DEFAULT_VAR_DICT["gddharv_var"]
+        ds = xr.Dataset(
+            data_vars={
+                hui_var: hui_da,
+                gddharv_var: gddharv_da,
+            }
+        )
+
+        da_out = c2o.get_huifrac(ds)
+        self.assertTrue(da_out.equals(target_da))
+
+    def test_get_huifrac_customnames(self):
+        """
+        Test get_huifrac() with custom variable names
+        """
+        hui_da = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+        )
+        gddharv_da = xr.DataArray(
+            data=np.array([[1, 4, 12, 4], [25, 6, 7, 8]]),
+        )
+        target_da = xr.DataArray(
+            data=np.array([[1, 0.5, 0.25, 1], [0.2, 1, 1, 1]]),
+            attrs={"units": "Fraction of required"},
+        )
+        hui_var = "hui_custom_name"
+        gddharv_var = "gddharv_custom_name"
+        var_dict = {
+            "hui_var": hui_var,
+            "gddharv_var": gddharv_var,
+        }
+        ds = xr.Dataset(
+            data_vars={
+                hui_var: hui_da,
+                gddharv_var: gddharv_da,
+            }
+        )
+
+        da_out = c2o.get_huifrac(ds, var_dict=var_dict)
+        self.assertTrue(da_out.equals(target_da))
+
+    def test_get_huifrac_gddharv0(self):
+        """
+        Test that get_huifrac() correctly handles GDDHARV 0
+        """
+        hui_da = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+        )
+        gddharv_da = xr.DataArray(
+            data=np.array([[1, 4, 0, 4], [25, 6, 7, 8]]),
+        )
+        target_da = xr.DataArray(
+            data=np.array([[1, 0.5, 1, 1], [0.2, 1, 1, 1]]), attrs={"units": "Fraction of required"}
+        )
+        hui_var = c2o.DEFAULT_VAR_DICT["hui_var"]
+        gddharv_var = c2o.DEFAULT_VAR_DICT["gddharv_var"]
+        ds = xr.Dataset(
+            data_vars={
+                hui_var: hui_da,
+                gddharv_var: gddharv_da,
+            }
+        )
+
+        da_out = c2o.get_huifrac(ds)
+        self.assertTrue(da_out.equals(target_da))
+
+    def test_get_huifrac_preserves_metadata(self):
+        """
+        Test that get_huifrac() preserves metadata
+        """
+        pft = np.array([1, 2, 3, 4])
+        pft_da = xr.DataArray(
+            data=pft,
+            dims=["pft"],
+        )
+        time = np.array([1, 2])
+        time_da = xr.DataArray(
+            data=time,
+            dims=["time"],
+        )
+        hui_da = xr.DataArray(
+            data=np.array([[1, 2, 3, 4], [5, 6, 7, 8]]),
+            dims=["time", "pft"],
+            coords=[time_da, pft_da],
+        )
+        gddharv_da = xr.DataArray(
+            data=np.array([[1, 4, 12, 4], [25, 6, 7, 8]]),
+            dims=["time", "pft"],
+            coords=[time_da, pft_da],
+        )
+        target_da = xr.DataArray(
+            data=np.array([[1, 0.5, 0.25, 1], [0.2, 1, 1, 1]]),
+            attrs={"units": "Fraction of required"},
+            dims=["time", "pft"],
+            coords=[time_da, pft_da],
+        )
+        hui_var = c2o.DEFAULT_VAR_DICT["hui_var"]
+        gddharv_var = c2o.DEFAULT_VAR_DICT["gddharv_var"]
+        ds = xr.Dataset(
+            data_vars={
+                hui_var: hui_da,
+                gddharv_var: gddharv_da,
+            }
+        )
+
+        da_out = c2o.get_huifrac(ds)
+        self.assertTrue(da_out.equals(target_da))
