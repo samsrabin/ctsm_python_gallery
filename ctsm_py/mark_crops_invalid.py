@@ -9,7 +9,7 @@ from ctsm_py.crop_defaults import DEFAULT_VAR_DICT
 from ctsm_py.crop_secondary_variables import _handle_huifrac_where_gddharv_notpos
 
 
-def _get_min_viable_hui(ds, min_viable_hui, huifrac_var):
+def _get_min_viable_hui(ds, min_viable_hui, huifrac_var, this_pft=None):
     """
     Get minimum viable HUI values.
 
@@ -22,7 +22,7 @@ def _get_min_viable_hui(ds, min_viable_hui, huifrac_var):
     numpy.ndarray: Minimum viable HUI values to use.
     """
     if min_viable_hui in ["isimip3", "ggcmi3"]:
-        min_viable_hui_touse = _get_isimip3_min_hui(ds, huifrac_var)
+        min_viable_hui_touse = _get_isimip3_min_hui(ds, huifrac_var, this_pft=this_pft)
     elif isinstance(min_viable_hui, str):
         raise NotImplementedError(
             f"min_viable_hui {min_viable_hui} not recognized. Accepted strings are ggcmi3 or"
@@ -161,7 +161,13 @@ def mark_invalid_season_too_long(ds, da_in, mxmats, gslen_var, invalid_value=0, 
 
 
 def mark_crops_invalid(
-    ds, in_var, min_viable_hui=None, mxmats=None, var_dict=DEFAULT_VAR_DICT, invalid_value=0
+    ds,
+    in_var,
+    min_viable_hui=None,
+    mxmats=None,
+    var_dict=DEFAULT_VAR_DICT,
+    invalid_value=0,
+    this_pft=None,
 ):  # pylint: disable=too-many-positional-arguments
     """
     Mark a variable as invalid where minimum viable HUI wasn't reached or season was longer than
@@ -186,7 +192,9 @@ def mark_crops_invalid(
         huifrac = _handle_huifrac_where_gddharv_notpos(
             ds[var_dict["huifrac_var"]], ds[var_dict["gddharv_var"]]
         )
-        min_viable_hui_touse = _get_min_viable_hui(ds, min_viable_hui, var_dict["huifrac_var"])
+        min_viable_hui_touse = _get_min_viable_hui(
+            ds, min_viable_hui, var_dict["huifrac_var"], this_pft=this_pft
+        )
         if np.any(huifrac < min_viable_hui_touse):
             da_out = mark_invalid_hui_too_low(
                 da_out, huifrac, min_viable_hui_touse, invalid_value=invalid_value
@@ -197,7 +205,12 @@ def mark_crops_invalid(
     # mxmat
     if mxmat_limited:
         da_out = mark_invalid_season_too_long(
-            ds, da_out, mxmats, var_dict["gslen_var"], invalid_value=invalid_value
+            ds,
+            da_out,
+            mxmats,
+            var_dict["gslen_var"],
+            invalid_value=invalid_value,
+            this_pft=this_pft,
         )
         da_out.attrs["mxmat_limited"] = True
 
