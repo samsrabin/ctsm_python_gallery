@@ -36,3 +36,68 @@ def get_huifrac(ds, var_dict=DEFAULT_VAR_DICT):
 
     da_huifrac.attrs["units"] = "Fraction of required"
     return da_huifrac
+
+
+def _calendar_has_leapdays(time_da):
+    """
+    Returns True if da has has a calendar and it definitely has leap days
+    """
+    # Handle trivial cases where time is missing, empty, or a plain numpy type
+    if "time" not in time_da.dims:
+        return False
+    if len(time_da) == 0:
+        return False
+    time0 = time_da.values[0]
+    if hasattr(time0, "dtype"):
+        return False
+
+    # Get day of year for Dec. 31 of a leap year
+    if not hasattr(time0, "dayofyr"):
+        raise NotImplementedError(f"Calendar type {type(time0)}")
+    dec_31_leapyr = type(time0)(2024, 12, 31).dayofyr
+
+    return dec_31_leapyr > 365
+
+
+def get_gslen(ds):
+    """
+    Given a dataset, calculate growing season length as HDATES - SDATES_PERHARV
+    """
+    var_hdates = "HDATES"
+    var_sdates = "SDATES_PERHARV"
+    da_hdates = ds[var_hdates]
+    da_sdates = ds[var_sdates]
+
+    # Check for weirdness
+    if np.any(da_hdates < 1):
+        raise ValueError(f"Unexpected {var_hdates} value(s) < 1")
+    if np.any(da_sdates < 1):
+        raise ValueError(f"Unexpected {var_sdates} value(s) < 1")
+    if np.any(da_hdates > 366):
+        raise ValueError(f"Unexpected {var_hdates} value(s) > 366")
+    if np.any(da_sdates > 366):
+        raise ValueError(f"Unexpected {var_sdates} value(s) > 366")
+    if not np.array_equal(np.isnan(da_hdates), np.isnan(da_sdates)):
+        raise ValueError(f"Unexpected NaN mismatch between {var_hdates} and {var_sdates}")
+
+    # Check for no leap years
+    if (
+        "time" in ds
+        and any("time" in x.dims for x in [da_hdates, da_sdates])
+        and _calendar_has_leapdays(ds["time"])
+    ):
+        raise NotImplementedError("Unexpected calendar with leap days")
+    if np.any(da_hdates == 366):
+        raise NotImplementedError(f"Unexpected {var_hdates} value(s) == 366 suggesting leap days")
+    if np.any(da_sdates == 366):
+        raise NotImplementedError(f"Unexpected {var_sdates} value(s) == 366 suggesting leap days")
+
+    da_gslen = da_hdates - da_sdates
+
+    # Handle seasons that crossed over Jan. 1
+    tmp = da_gslen.values
+    tmp[tmp < 0] = 365 + tmp[tmp < 0]
+    da_gslen.values = tmp
+
+    da_gslen.attrs["units"] = "days"
+    return da_gslen
